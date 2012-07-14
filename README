@@ -1,0 +1,1 @@
+gomaild is a tiny mailserver written in Go. It has a simple API to process the received message. In the maild main server (example) it just saves the incoming in the CWD.
