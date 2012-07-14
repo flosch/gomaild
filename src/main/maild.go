@@ -10,7 +10,7 @@ import (
 	"maild"
 )
 
-func MailHandler(mail *maild.Mail) {
+func mailHandler(mail *maild.Mail) {
 	filename := fmt.Sprintf("%d.mail", time.Now().Unix())
 
 	fmt.Printf("Received mail from %s to %+s (saved as %s)\n",
@@ -25,5 +25,5 @@ func main() {
 	flag.Parse()
 	fmt.Printf("GoMaild running on %s\n", *address)
 	server := maild.NewMailServer(*address)
-	log.Fatal(server.ListenAndReceive(MailHandler))
+	log.Fatal(server.ListenAndReceive(mailHandler))
 }

@@ -43,7 +43,6 @@ const (
 	AwaitingMailFrom
 	AwaitingRcpt
 	AwaitingData
-	AwaitingQuitOrNew
 )
 
 func respond(conn *textproto.Conn, code int, msg string) error {
@@ -99,7 +98,7 @@ loop:
 				return
 			}
 			if len(addrs) <= 0 {
-				respond(c, 451, "Host found, but not address found.")
+				respond(c, 451, "Host found, but no addresses found.")
 				c.Close()
 				return
 			}
