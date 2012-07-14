@@ -84,12 +84,12 @@ loop:
 		switch state {
 		case AwaitingHelo:
 			// HELO foobar
-			if !strings.HasPrefix(line, "HELO") {
+			param, err := getParam(line, "HELO ")
+			if err != nil {
 				respond(c, 502, "HELO awaited.")
 				continue loop
 			}
-			hostname := strings.TrimSpace(line[5:])
-			addrs, err := net.LookupHost(hostname) // FIXME: Look for MX?
+			addrs, err := net.LookupHost(param) // FIXME: Look for MX?
 			//log.Printf("Looking up %s: %s\n", hostname, addrs)
 			if err != nil {
 				// Might be a SPAM bot
@@ -103,16 +103,16 @@ loop:
 				return
 			}
 			respond(c, 250, "flosch.dyndns.info")
-			mail.Hostname = hostname
+			mail.Hostname = param
 			state++
 		case AwaitingMailFrom:
-			if !strings.HasPrefix(line, "MAIL FROM:") {
+			param, err := getParam(line, "MAIL FROM:")
+			if err != nil {
 				respond(c, 502, "MAIL FROM awaited.")
 				continue loop
 			}
-			from := strings.TrimSpace(line[10:])
 			respond(c, 250, "OK")
-			mail.From = from
+			mail.From = param
 			state++
 		case AwaitingRcpt:
 			param, err := getParam(line, "RCPT TO:")
