@@ -9,6 +9,6 @@ type Mail struct {
 
 func NewMail() *Mail {
 	return &Mail{
-		Recipients: make([]string, 1),
+		Recipients: make([]string, 0, 1),
 	}
 }
