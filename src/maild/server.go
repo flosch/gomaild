@@ -1,3 +1,9 @@
+/*
+Gomaild is a tiny mailserver which supports standard unencrypted (no TLS for instance) 
+mail transfer and has no support for any mail extensions in existence. It has
+no relay capability and handles incoming mails only and forwards them to your
+very own mail handler. 
+*/
 package maild
 
 import (
@@ -15,6 +21,7 @@ type Server struct {
 	handler  func(*Mail)
 }
 
+// Creates a new mail server with given address and hostname
 func NewMailServer(address string, hostname string) *Server {
 	s := &Server{
 		address:  address,
@@ -23,6 +30,10 @@ func NewMailServer(address string, hostname string) *Server {
 	return s
 }
 
+// Listens and receives forever; delivers incoming mails to 
+// your handler. ListenAndReceive handles each connection in
+// a single Goroutine; therefore it might be a good idea
+// to increase GOMAXPROCS for very busy servers.
 func (s *Server) ListenAndReceive(handler func(*Mail)) error {
 	s.handler = handler
 	ln, err := net.Listen("tcp", s.address)
@@ -41,10 +52,10 @@ func (s *Server) ListenAndReceive(handler func(*Mail)) error {
 }
 
 const (
-	AwaitingHelo = iota
-	AwaitingMailFrom
-	AwaitingRcpt
-	AwaitingData
+	awaitingHelo = iota
+	awaitingMailFrom
+	awaitingRcpt
+	awaitingData
 )
 
 func respond(conn *textproto.Conn, code int, msg string) error {
@@ -60,7 +71,7 @@ func getParam(line string, cmd string) (string, error) {
 }
 
 func (s *Server) handleConnection(conn net.Conn) {
-	state := AwaitingHelo
+	state := awaitingHelo
 	c := textproto.NewConn(conn)
 	mail := NewMail()
 
@@ -84,7 +95,7 @@ loop:
 		}
 
 		switch state {
-		case AwaitingHelo:
+		case awaitingHelo:
 			// HELO foobar
 			param, err := getParam(line, "HELO ")
 			if err != nil {
@@ -107,7 +118,7 @@ loop:
 			respond(c, 250, s.hostname)
 			mail.Hostname = param
 			state++
-		case AwaitingMailFrom:
+		case awaitingMailFrom:
 			param, err := getParam(line, "MAIL FROM:")
 			if err != nil {
 				respond(c, 502, "MAIL FROM awaited.")
@@ -116,7 +127,7 @@ loop:
 			respond(c, 250, "OK")
 			mail.From = param
 			state++
-		case AwaitingRcpt:
+		case awaitingRcpt:
 			param, err := getParam(line, "RCPT TO:")
 			if err != nil {
 				respond(c, 502, "RCPT TO awaited.")
@@ -125,7 +136,7 @@ loop:
 			respond(c, 250, "OK")
 			mail.Recipients = append(mail.Recipients, param)
 			state++
-		case AwaitingData:
+		case awaitingData:
 			if strings.TrimSpace(line) != "DATA" {
 				respond(c, 502, "DATA awaited")
 				continue loop
@@ -140,7 +151,7 @@ loop:
 			mail.Data = strings.Join(lines, "\r\n")
 			//fmt.Printf("Data\n----------------\n%s\n----------------\n", mail.Data)
 			s.handler(mail)
-			state = AwaitingMailFrom // Go back to MAIL FROM
+			state = awaitingMailFrom // Go back to MAIL FROM
 		default:
 			panic("Not implemented")
 		}
