@@ -20,10 +20,11 @@ func mailHandler(mail *maild.Mail) {
 }
 
 var address = flag.String("address", ":2525", "Address running on")
+var hostname = flag.String("hostname", "localhost", "The host which is running gomaild")
 
 func main() {
 	flag.Parse()
 	fmt.Printf("GoMaild running on %s\n", *address)
-	server := maild.NewMailServer(*address)
+	server := maild.NewMailServer(*address, *hostname)
 	log.Fatal(server.ListenAndReceive(mailHandler))
 }

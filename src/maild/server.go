@@ -10,13 +10,15 @@ import (
 )
 
 type Server struct {
-	address string
-	handler func(*Mail)
+	address  string
+	hostname string
+	handler  func(*Mail)
 }
 
-func NewMailServer(address string) *Server {
+func NewMailServer(address string, hostname string) *Server {
 	s := &Server{
-		address: address,
+		address:  address,
+		hostname: hostname,
 	}
 	return s
 }
@@ -102,7 +104,7 @@ loop:
 				c.Close()
 				return
 			}
-			respond(c, 250, "flosch.dyndns.info")
+			respond(c, 250, s.hostname)
 			mail.Hostname = param
 			state++
 		case AwaitingMailFrom:
